@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jimmy John's Group Order</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #c41e3a;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .mode-btn.active {
+            background: #c41e3a;
+            color: white;
+            border-color: #c41e3a;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        
+        input[type="text"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #c41e3a;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            font-weight: 400;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .submit-btn:hover {
+            background: #a01729;
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .orders-list {
+            display: none;
+        }
+        
+        .orders-list.active {
+            display: block;
+        }
+        
+        .order-item {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #c41e3a;
+        }
+        
+        .order-item h3 {
+            color: #c41e3a;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .order-item p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .order-item strong {
+            color: #333;
+        }
+        
+        .no-orders {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .summary-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .copy-btn, .clear-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #c41e3a;
+            background: white;
+            color: #c41e3a;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #c41e3a;
+            color: white;
+        }
+        
+        .clear-btn {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        
+        .clear-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .sandwich-description {
+            background: #f8f9fa;
+            border-left: 4px solid #c41e3a;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .sandwich-description.show {
+            display: block;
+        }
+        
+        .order-count {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #c41e3a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🥪 Jimmy John's Group Order</h1>
+            <p>Submit your order or view all orders</p>
+        </div>
+        
+        <div class="mode-switch">
+            <button class="mode-btn active" onclick="switchMode('order')">Place Order</button>
+            <button class="mode-btn" onclick="switchMode('view')">View All Orders</button>
+        </div>
+        
+        <div class="content">
+            <!-- Order Form -->
+            <div id="orderForm" class="order-form">
+                <div class="success-message" id="successMessage">
+                    ✓ Order submitted successfully!
+                </div>
+                
+                <form id="jjForm" onsubmit="submitOrder(event)">
+                    <div class="form-group">
+                        <label for="name">Your Name *</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sandwich">Sandwich *</label>
+                        <select id="sandwich" required onchange="showSandwichDescription()">
+                            <option value="">Select a sandwich...</option>
+                            <option value="#1 Pepe">★ #1 Pepe (Ham & Provolone)</option>
+                            <option value="#2 Big John">★ #2 Big John (Roast Beef)</option>
+                            <option value="#3 Totally Tuna">★ #3 Totally Tuna</option>
+                            <option value="#4 Turkey Tom">★ #4 Turkey Tom</option>
+                            <option value="#5 Vito">★ #5 Vito (Italian Sub)</option>
+                            <option value="#6 The Veggie">★ #6 The Veggie</option>
+                            <option value="#7 Smoked Ham Club">★ #7 Smoked Ham Club</option>
+                            <option value="#8 Billy Club">★ #8 Billy Club (Roast Beef Club)</option>
+                            <option value="#9 Italian Night Club">★ #9 Italian Night Club</option>
+                            <option value="#10 Hunter's Club">★ #10 Hunter's Club (Roast Beef & Provolone)</option>
+                            <option value="#11 Country Club">★ #11 Country Club (Turkey & Ham)</option>
+                            <option value="#12 Beach Club">★ #12 Beach Club (Turkey, Bacon)</option>
+                            <option value="#13 Gourmet Veggie Club">★ #13 Gourmet Veggie Club</option>
+                            <option value="#14 Bootlegger Club">★ #14 Bootlegger Club (Roast Beef & Turkey)</option>
+                            <option value="#15 Club Tuna">★ #15 Club Tuna</option>
+                            <option value="#16 Club Lulu">★ #16 Club Lulu (Turkey & Bacon)</option>
+                            <option value="#17 Ultimate Porker">★ #17 Ultimate Porker (Ham, Bacon, Cheese)</option>
+                            <option value="J.J. Gargantuan">★ J.J. Gargantuan (The Big One!)</option>
+                            <option value="J.J.B.L.T.">J.J.B.L.T.</option>
+                        </select>
+                        <div id="sandwichDescription" class="sandwich-description"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bread">Bread *</label>
+                        <select id="bread" required>
+                            <option value="">Select bread...</option>
+                            <option value="French Bread">French Bread</option>
+                            <option value="Thick Sliced Wheat">Thick Sliced Wheat</option>
+                            <option value="9-Grain Wheat">9-Grain Wheat</option>
+                            <option value="Lettuce Wrap (Unwich)">Lettuce Wrap (Unwich)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Add-ons</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="bacon" value="Add Bacon" class="addon-checkbox">
+                                <label for="bacon">🥓 Bacon</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cheese" value="Extra Cheese" class="addon-checkbox">
+                                <label for="cheese">🧀 Extra Cheese</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="avocado" value="Avocado Spread" class="addon-checkbox">
+                                <label for="avocado">🥑 Avocado Spread</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="extraMeat" value="Extra Meat" class="addon-checkbox">
+                                <label for="extraMeat">🥩 Extra Meat</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="hotpeppers" value="Hot Peppers" class="addon-checkbox">
+                                <label for="hotpeppers">🌶️ Hot Peppers</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="pickles" value="Pickles" class="addon-checkbox">
+                                <label for="pickles">🥒 Pickles</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="extraOnion" value="Extra Onion" class="addon-checkbox">
+                                <label for="extraOnion">🧅 Extra Onion</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="extraLettuce" value="Extra Lettuce" class="addon-checkbox">
+                                <label for="extraLettuce">🥬 Extra Lettuce</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="extraTomato" value="Extra Tomato" class="addon-checkbox">
+                                <label for="extraTomato">🍅 Extra Tomato</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cucumber" value="Cucumber" class="addon-checkbox">
+                                <label for="cucumber">🥒 Cucumber</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="oregano" value="Oregano-Basil" class="addon-checkbox">
+                                <label for="oregano">🌿 Oregano-Basil</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="oilVinegar" value="Oil & Vinegar" class="addon-checkbox">
+                                <label for="oilVinegar">Oil & Vinegar</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="mustard" value="Yellow Mustard" class="addon-checkbox">
+                                <label for="mustard">Yellow Mustard</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="dijon" value="Dijon Mustard" class="addon-checkbox">
+                                <label for="dijon">Dijon Mustard</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Removals</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="noMayo" value="No Mayo" class="addon-checkbox">
+                                <label for="noMayo">❌ No Mayo</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="noTomato" value="No Tomato" class="addon-checkbox">
+                                <label for="noTomato">❌ No Tomato</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="noOnion" value="No Onion" class="addon-checkbox">
+                                <label for="noOnion">❌ No Onion</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="noLettuce" value="No Lettuce" class="addon-checkbox">
+                                <label for="noLettuce">❌ No Lettuce</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="noCheese" value="No Cheese" class="addon-checkbox">
+                                <label for="noCheese">❌ No Cheese</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Special Instructions</label>
+                        <textarea id="notes" placeholder="Any special requests..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Submit Order</button>
+                </form>
+            </div>
+            
+            <!-- Orders List -->
+            <div id="ordersList" class="orders-list">
+                <div class="order-count" id="orderCount">
+                    No orders yet
+                </div>
+                
+                <div id="ordersContainer"></div>
+                
+                <div class="summary-actions">
+                    <button class="copy-btn" onclick="copyAllOrders()">📋 Copy All Orders</button>
+                    <button class="clear-btn" onclick="clearAllOrders()">🗑️ Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load orders from localStorage
+        function loadOrders() {
+            const orders = localStorage.getItem('jjOrders');
+            return orders ? JSON.parse(orders) : [];
+        }
+        
+        // Save orders to localStorage
+        function saveOrders(orders) {
+            localStorage.setItem('jjOrders', JSON.stringify(orders));
+        }
+        
+        // Switch between order form and view all
+        function switchMode(mode) {
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (mode === 'order') {
+                buttons[0].classList.add('active');
+                document.getElementById('orderForm').style.display = 'block';
+                document.getElementById('ordersList').classList.remove('active');
+            } else {
+                buttons[1].classList.add('active');
+                document.getElementById('orderForm').style.display = 'none';
+                document.getElementById('ordersList').classList.add('active');
+                displayOrders();
+            }
+        }
+        
+        // Submit order
+        function submitOrder(event) {
+            event.preventDefault();
+            console.log('Submit triggered');
+            
+            try {
+                const addons = [];
+                document.querySelectorAll('.addon-checkbox:checked').forEach(checkbox => {
+                    addons.push(checkbox.value);
+                });
+                
+                const order = {
+                    name: document.getElementById('name').value,
+                    sandwich: document.getElementById('sandwich').value,
+                    bread: document.getElementById('bread').value,
+                    addons: addons,
+                    notes: document.getElementById('notes').value,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('Order created:', order);
+                
+                const orders = loadOrders();
+                orders.push(order);
+                saveOrders(orders);
+                
+                console.log('Order saved');
+                
+                // Show success message
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.add('show');
+                setTimeout(() => successMsg.classList.remove('show'), 3000);
+                
+                // Reset form
+                document.getElementById('jjForm').reset();
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                alert('Error submitting order. Please check the console for details.');
+            }
+        }
+        
+        // Display all orders
+        function displayOrders() {
+            const orders = loadOrders();
+            const container = document.getElementById('ordersContainer');
+            const orderCount = document.getElementById('orderCount');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="no-orders">No orders submitted yet</div>';
+                orderCount.textContent = 'No orders yet';
+                return;
+            }
+            
+            orderCount.textContent = `${orders.length} order${orders.length !== 1 ? 's' : ''} submitted`;
+            
+            container.innerHTML = orders.map((order, index) => {
+                const addons = order.addons.filter(a => !a.includes('No '));
+                const removals = order.addons.filter(a => a.includes('No '));
+                
+                return `
+                <div class="order-item">
+                    <h3>${order.name}</h3>
+                    <p><strong>Sandwich:</strong> ${order.sandwich}</p>
+                    <p><strong>Bread:</strong> ${order.bread}</p>
+                    ${addons.length > 0 ? `<p><strong>Add-ons:</strong> ${addons.join(', ')}</p>` : ''}
+                    ${removals.length > 0 ? `<p><strong>Remove:</strong> ${removals.join(', ')}</p>` : ''}
+                    ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
+                </div>
+            `;
+            }).join('');
+        }
+        
+        // Copy all orders to clipboard
+        function copyAllOrders() {
+            const orders = loadOrders();
+            if (orders.length === 0) {
+                alert('No orders to copy!');
+                return;
+            }
+            
+            let text = `JIMMY JOHN'S GROUP ORDER (${orders.length} orders)\n`;
+            text += '='.repeat(50) + '\n\n';
+            
+            orders.forEach((order, index) => {
+                const addons = order.addons.filter(a => !a.includes('No '));
+                const removals = order.addons.filter(a => a.includes('No '));
+                
+                text += `${index + 1}. ${order.name}\n`;
+                text += `   Sandwich: ${order.sandwich}\n`;
+                text += `   Bread: ${order.bread}\n`;
+                if (addons.length > 0) text += `   Add-ons: ${addons.join(', ')}\n`;
+                if (removals.length > 0) text += `   Remove: ${removals.join(', ')}\n`;
+                if (order.notes) text += `   Notes: ${order.notes}\n`;
+                text += '\n';
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('All orders copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy. Please try again.');
+            });
+        }
+        
+        // Clear all orders
+        function clearAllOrders() {
+            if (confirm('Are you sure you want to clear all orders? This cannot be undone.')) {
+                localStorage.removeItem('jjOrders');
+                displayOrders();
+            }
+        }
+        
+        // Show sandwich description
+        function showSandwichDescription() {
+            const sandwich = document.getElementById('sandwich').value;
+            const descriptionDiv = document.getElementById('sandwichDescription');
+            
+            const descriptions = {
+                "#1 Pepe": "Real applewood smoked ham and provolone cheese garnished with lettuce, tomato, and mayo.",
+                "#2 Big John": "Medium rare choice roast beef, topped with yummy mayo, lettuce, and tomato.",
+                "#3 Totally Tuna": "Fresh housemade tuna salad, Hellmann's mayo, lettuce, tomato, and our homemade bread!",
+                "#4 Turkey Tom": "Fresh sliced turkey breast, topped with lettuce, tomato, alfalfa sprouts, and mayo.",
+                "#5 Vito": "The original Italian sub with genoa salami, provolone, capicola, onion, lettuce, tomato, and an authentic Italian vinaigrette.",
+                "#6 The Veggie": "Layers of provolone cheese separated by real avocado spread, sliced cucumber, lettuce, tomato, and mayo.",
+                "#7 Smoked Ham Club": "A full 1/4 pound of real applewood smoked ham, provolone cheese, lettuce, tomato, and real mayo!",
+                "#8 Billy Club": "Choice roast beef, smoked ham, provolone cheese, Dijon mustard, lettuce, tomato, and mayo.",
+                "#9 Italian Night Club": "Real genoa salami, Italian capicola, smoked ham, and provolone cheese all topped with lettuce, tomato, onion, mayo, and our homemade Italian vinaigrette.",
+                "#10 Hunter's Club": "A full 1/4 pound of fresh sliced medium rare roast beef, provolone, lettuce, tomato, and mayo.",
+                "#11 Country Club": "Fresh sliced turkey breast, applewood smoked ham, provolone, and tons of lettuce, tomato, and mayo!",
+                "#12 Beach Club": "Fresh baked turkey breast, provolone cheese, avocado spread, sliced cucumber, sprouts, lettuce, tomato, and mayo!",
+                "#13 Gourmet Veggie Club": "Double provolone, real avocado spread, sliced cucumber, alfalfa sprouts, lettuce, tomato, and mayo.",
+                "#14 Bootlegger Club": "Roast beef, turkey breast, lettuce, tomato, and mayo. An American classic!",
+                "#15 Club Tuna": "The same as our #3 Totally Tuna except this one has a lot more. Fresh housemade tuna salad, provolone, sprouts, cucumber, lettuce, and tomato.",
+                "#16 Club Lulu": "Fresh sliced turkey breast, bacon, lettuce, tomato, and mayo.",
+                "#17 Ultimate Porker": "Real applewood smoked ham and bacon with lettuce, tomato and mayo, what could be better!",
+                "J.J. Gargantuan": "This sandwich was invented by a hungry Marine. Genoa salami, sliced smoked ham, capicola, roast beef, turkey and provolone, jammed into one of our homemade French buns then smothered with onions, mayo, lettuce, tomato, and our homemade Italian dressing.",
+                "J.J.B.L.T.": "Bacon, lettuce, tomato, and mayo."
+            };
+            
+            if (sandwich && descriptions[sandwich]) {
+                descriptionDiv.textContent = descriptions[sandwich];
+                descriptionDiv.classList.add('show');
+            } else {
+                descriptionDiv.classList.remove('show');
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            displayOrders();
+        });
+    </script>
+</body>
+</html>
