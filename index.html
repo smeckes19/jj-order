@@ -44,32 +44,6 @@
             font-size: 14px;
         }
         
-        .mode-switch {
-            display: flex;
-            gap: 10px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .mode-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #dee2e6;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .mode-btn.active {
-            background: #c41e3a;
-            color: white;
-            border-color: #c41e3a;
-        }
-        
         .content {
             padding: 30px 20px;
         }
@@ -158,77 +132,6 @@
             cursor: not-allowed;
         }
         
-        .orders-list {
-            display: none;
-        }
-        
-        .orders-list.active {
-            display: block;
-        }
-        
-        .order-item {
-            background: #f8f9fa;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            border-left: 4px solid #c41e3a;
-        }
-        
-        .order-item h3 {
-            color: #c41e3a;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-        
-        .order-item p {
-            margin: 4px 0;
-            font-size: 14px;
-            color: #555;
-        }
-        
-        .order-item strong {
-            color: #333;
-        }
-        
-        .no-orders {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-        
-        .summary-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .copy-btn, .clear-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #c41e3a;
-            background: white;
-            color: #c41e3a;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .copy-btn:hover {
-            background: #c41e3a;
-            color: white;
-        }
-        
-        .clear-btn {
-            border-color: #dc3545;
-            color: #dc3545;
-        }
-        
-        .clear-btn:hover {
-            background: #dc3545;
-            color: white;
-        }
-        
         .success-message {
             background: #d4edda;
             color: #155724;
@@ -258,28 +161,13 @@
         .sandwich-description.show {
             display: block;
         }
-        
-        .order-count {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            color: #c41e3a;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🥪 Jimmy John's Group Order</h1>
-            <p>Submit your order or view all orders</p>
-        </div>
-        
-        <div class="mode-switch">
-            <button class="mode-btn active" onclick="switchMode('order')">Place Order</button>
-            <button class="mode-btn" onclick="switchMode('view')">View All Orders</button>
+            <p>Submit your order</p>
         </div>
         
         <div class="content">
@@ -429,163 +317,81 @@
                     <button type="submit" class="submit-btn">Submit Order</button>
                 </form>
             </div>
-            
-            <!-- Orders List -->
-            <div id="ordersList" class="orders-list">
-                <div class="order-count" id="orderCount">
-                    No orders yet
-                </div>
-                
-                <div id="ordersContainer"></div>
-                
-                <div class="summary-actions">
-                    <button class="copy-btn" onclick="copyAllOrders()">📋 Copy All Orders</button>
-                    <button class="clear-btn" onclick="clearAllOrders()">🗑️ Clear All</button>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        // Load orders from localStorage
-        function loadOrders() {
-            const orders = localStorage.getItem('jjOrders');
-            return orders ? JSON.parse(orders) : [];
-        }
-        
-        // Save orders to localStorage
-        function saveOrders(orders) {
-            localStorage.setItem('jjOrders', JSON.stringify(orders));
-        }
-        
-        // Switch between order form and view all
-        function switchMode(mode) {
-            const buttons = document.querySelectorAll('.mode-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            if (mode === 'order') {
-                buttons[0].classList.add('active');
-                document.getElementById('orderForm').style.display = 'block';
-                document.getElementById('ordersList').classList.remove('active');
-            } else {
-                buttons[1].classList.add('active');
-                document.getElementById('orderForm').style.display = 'none';
-                document.getElementById('ordersList').classList.add('active');
-                displayOrders();
-            }
-        }
+        // Google Sheets Web App URL - YOU NEED TO REPLACE THIS
+        const GOOGLE_SCRIPT_URL = https://script.google.com/macros/s/AKfycbyH8hgK5YOCOK-OhCyBtkT-po8zTIfdPuCGubSHwMonwMEJ7IsdM3ST9xhUzSwrmwfieg/exec;
         
         // Submit order
         function submitOrder(event) {
             event.preventDefault();
-            console.log('Submit triggered');
             
             try {
+                const submitBtn = document.querySelector('.submit-btn');
+                const successMsg = document.getElementById('successMessage');
+                
+                // Disable button while submitting
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                
                 const addons = [];
                 document.querySelectorAll('.addon-checkbox:checked').forEach(checkbox => {
                     addons.push(checkbox.value);
                 });
                 
+                const removals = addons.filter(a => a.includes('No '));
+                const actualAddons = addons.filter(a => !a.includes('No '));
+                
                 const order = {
                     name: document.getElementById('name').value,
                     sandwich: document.getElementById('sandwich').value,
                     bread: document.getElementById('bread').value,
-                    addons: addons,
-                    notes: document.getElementById('notes').value,
-                    timestamp: new Date().toISOString()
+                    addons: actualAddons.join(', ') || 'None',
+                    removals: removals.join(', ') || 'None',
+                    notes: document.getElementById('notes').value || 'None',
+                    timestamp: new Date().toLocaleString()
                 };
                 
-                console.log('Order created:', order);
+                // Send to Google Sheets
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(order)
+                })
+                .then(() => {
+                    // Show success message
+                    successMsg.classList.add('show');
+                    setTimeout(() => successMsg.classList.remove('show'), 3000);
+                    
+                    // Reset form
+                    document.getElementById('jjForm').reset();
+                    document.getElementById('sandwichDescription').classList.remove('show');
+                    
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Order';
+                    
+                    // Scroll to top
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                })
+                .catch(error => {
+                    console.error('Error submitting order:', error);
+                    alert('Error submitting order. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Order';
+                });
                 
-                const orders = loadOrders();
-                orders.push(order);
-                saveOrders(orders);
-                
-                console.log('Order saved');
-                
-                // Show success message
-                const successMsg = document.getElementById('successMessage');
-                successMsg.classList.add('show');
-                setTimeout(() => successMsg.classList.remove('show'), 3000);
-                
-                // Reset form
-                document.getElementById('jjForm').reset();
-                
-                // Scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch (error) {
                 console.error('Error submitting order:', error);
-                alert('Error submitting order. Please check the console for details.');
-            }
-        }
-        
-        // Display all orders
-        function displayOrders() {
-            const orders = loadOrders();
-            const container = document.getElementById('ordersContainer');
-            const orderCount = document.getElementById('orderCount');
-            
-            if (orders.length === 0) {
-                container.innerHTML = '<div class="no-orders">No orders submitted yet</div>';
-                orderCount.textContent = 'No orders yet';
-                return;
-            }
-            
-            orderCount.textContent = `${orders.length} order${orders.length !== 1 ? 's' : ''} submitted`;
-            
-            container.innerHTML = orders.map((order, index) => {
-                const addons = order.addons.filter(a => !a.includes('No '));
-                const removals = order.addons.filter(a => a.includes('No '));
-                
-                return `
-                <div class="order-item">
-                    <h3>${order.name}</h3>
-                    <p><strong>Sandwich:</strong> ${order.sandwich}</p>
-                    <p><strong>Bread:</strong> ${order.bread}</p>
-                    ${addons.length > 0 ? `<p><strong>Add-ons:</strong> ${addons.join(', ')}</p>` : ''}
-                    ${removals.length > 0 ? `<p><strong>Remove:</strong> ${removals.join(', ')}</p>` : ''}
-                    ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
-                </div>
-            `;
-            }).join('');
-        }
-        
-        // Copy all orders to clipboard
-        function copyAllOrders() {
-            const orders = loadOrders();
-            if (orders.length === 0) {
-                alert('No orders to copy!');
-                return;
-            }
-            
-            let text = `JIMMY JOHN'S GROUP ORDER (${orders.length} orders)\n`;
-            text += '='.repeat(50) + '\n\n';
-            
-            orders.forEach((order, index) => {
-                const addons = order.addons.filter(a => !a.includes('No '));
-                const removals = order.addons.filter(a => a.includes('No '));
-                
-                text += `${index + 1}. ${order.name}\n`;
-                text += `   Sandwich: ${order.sandwich}\n`;
-                text += `   Bread: ${order.bread}\n`;
-                if (addons.length > 0) text += `   Add-ons: ${addons.join(', ')}\n`;
-                if (removals.length > 0) text += `   Remove: ${removals.join(', ')}\n`;
-                if (order.notes) text += `   Notes: ${order.notes}\n`;
-                text += '\n';
-            });
-            
-            navigator.clipboard.writeText(text).then(() => {
-                alert('All orders copied to clipboard!');
-            }).catch(() => {
-                alert('Failed to copy. Please try again.');
-            });
-        }
-        
-        // Clear all orders
-        function clearAllOrders() {
-            if (confirm('Are you sure you want to clear all orders? This cannot be undone.')) {
-                localStorage.removeItem('jjOrders');
-                displayOrders();
+                alert('Error submitting order. Please check your connection and try again.');
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Order';
             }
         }
         
@@ -623,11 +429,6 @@
                 descriptionDiv.classList.remove('show');
             }
         }
-        
-        // Initialize on page load
-        window.addEventListener('load', () => {
-            displayOrders();
-        });
     </script>
 </body>
 </html>
