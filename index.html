@@ -321,114 +321,105 @@
     </div>
 
     <script>
-        // Google Sheets Web App URL - YOU NEED TO REPLACE THIS
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJwTso8qMwpOVWjZRwNwKAGHpC25KVq8U6SeoD-lBf2PpnBmnEX53wItzcxANuKId9RQ/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJwTso8qMwpOVWjZRwNwKAGHpC25KVq8U6SeoD-lBf2PpnBmnEX53wItzcxANuKId9RQ/exec';
+
+function submitOrder(event) {
+    event.preventDefault();
+    
+    try {
+        const submitBtn = document.querySelector('.submit-btn');
+        const successMsg = document.getElementById('successMessage');
         
-        // Submit order
-        function submitOrder(event) {
-            event.preventDefault();
-            
-            try {
-                const submitBtn = document.querySelector('.submit-btn');
-                const successMsg = document.getElementById('successMessage');
-                
-                // Disable button while submitting
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Submitting...';
-                
-                const addons = [];
-                document.querySelectorAll('.addon-checkbox:checked').forEach(checkbox => {
-                    addons.push(checkbox.value);
-                });
-                
-                const removals = addons.filter(a => a.includes('No '));
-                const actualAddons = addons.filter(a => !a.includes('No '));
-                
-                const order = {
-                    name: document.getElementById('name').value,
-                    sandwich: document.getElementById('sandwich').value,
-                    bread: document.getElementById('bread').value,
-                    addons: actualAddons.join(', ') || 'None',
-                    removals: removals.join(', ') || 'None',
-                    notes: document.getElementById('notes').value || 'None',
-                    timestamp: new Date().toLocaleString()
-                };
-                
-                // Send to Google Sheets
-                fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(order)
-                })
-                .then(() => {
-                    // Show success message
-                    successMsg.classList.add('show');
-                    setTimeout(() => successMsg.classList.remove('show'), 3000);
-                    
-                    // Reset form
-                    document.getElementById('jjForm').reset();
-                    document.getElementById('sandwichDescription').classList.remove('show');
-                    
-                    // Re-enable button
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Submit Order';
-                    
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                })
-                .catch(error => {
-                    console.error('Error submitting order:', error);
-                    alert('Error submitting order. Please try again.');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Submit Order';
-                });
-                
-            } catch (error) {
-                console.error('Error submitting order:', error);
-                alert('Error submitting order. Please check your connection and try again.');
-                const submitBtn = document.querySelector('.submit-btn');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Order';
-            }
-        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
         
-        // Show sandwich description
-        function showSandwichDescription() {
-            const sandwich = document.getElementById('sandwich').value;
-            const descriptionDiv = document.getElementById('sandwichDescription');
+        const addons = [];
+        document.querySelectorAll('.addon-checkbox:checked').forEach(checkbox => {
+            addons.push(checkbox.value);
+        });
+        
+        const removals = addons.filter(a => a.includes('No '));
+        const actualAddons = addons.filter(a => !a.includes('No '));
+        
+        const order = {
+            name: document.getElementById('name').value,
+            sandwich: document.getElementById('sandwich').value,
+            bread: document.getElementById('bread').value,
+            addons: actualAddons.join(', ') || 'None',
+            removals: removals.join(', ') || 'None',
+            notes: document.getElementById('notes').value || 'None',
+            timestamp: new Date().toLocaleString()
+        };
+        
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(order)
+        })
+        .then(() => {
+            successMsg.classList.add('show');
+            setTimeout(() => successMsg.classList.remove('show'), 3000);
             
-            const descriptions = {
-                "#1 Pepe": "Real applewood smoked ham and provolone cheese garnished with lettuce, tomato, and mayo.",
-                "#2 Big John": "Medium rare choice roast beef, topped with yummy mayo, lettuce, and tomato.",
-                "#3 Totally Tuna": "Fresh housemade tuna salad, Hellmann's mayo, lettuce, tomato, and our homemade bread!",
-                "#4 Turkey Tom": "Fresh sliced turkey breast, topped with lettuce, tomato, alfalfa sprouts, and mayo.",
-                "#5 Vito": "The original Italian sub with genoa salami, provolone, capicola, onion, lettuce, tomato, and an authentic Italian vinaigrette.",
-                "#6 The Veggie": "Layers of provolone cheese separated by real avocado spread, sliced cucumber, lettuce, tomato, and mayo.",
-                "#7 Smoked Ham Club": "A full 1/4 pound of real applewood smoked ham, provolone cheese, lettuce, tomato, and real mayo!",
-                "#8 Billy Club": "Choice roast beef, smoked ham, provolone cheese, Dijon mustard, lettuce, tomato, and mayo.",
-                "#9 Italian Night Club": "Real genoa salami, Italian capicola, smoked ham, and provolone cheese all topped with lettuce, tomato, onion, mayo, and our homemade Italian vinaigrette.",
-                "#10 Hunter's Club": "A full 1/4 pound of fresh sliced medium rare roast beef, provolone, lettuce, tomato, and mayo.",
-                "#11 Country Club": "Fresh sliced turkey breast, applewood smoked ham, provolone, and tons of lettuce, tomato, and mayo!",
-                "#12 Beach Club": "Fresh baked turkey breast, provolone cheese, avocado spread, sliced cucumber, sprouts, lettuce, tomato, and mayo!",
-                "#13 Gourmet Veggie Club": "Double provolone, real avocado spread, sliced cucumber, alfalfa sprouts, lettuce, tomato, and mayo.",
-                "#14 Bootlegger Club": "Roast beef, turkey breast, lettuce, tomato, and mayo. An American classic!",
-                "#15 Club Tuna": "The same as our #3 Totally Tuna except this one has a lot more. Fresh housemade tuna salad, provolone, sprouts, cucumber, lettuce, and tomato.",
-                "#16 Club Lulu": "Fresh sliced turkey breast, bacon, lettuce, tomato, and mayo.",
-                "#17 Ultimate Porker": "Real applewood smoked ham and bacon with lettuce, tomato and mayo, what could be better!",
-                "J.J. Gargantuan": "This sandwich was invented by a hungry Marine. Genoa salami, sliced smoked ham, capicola, roast beef, turkey and provolone, jammed into one of our homemade French buns then smothered with onions, mayo, lettuce, tomato, and our homemade Italian dressing.",
-                "J.J.B.L.T.": "Bacon, lettuce, tomato, and mayo."
-            };
+            document.getElementById('jjForm').reset();
+            document.getElementById('sandwichDescription').classList.remove('show');
             
-            if (sandwich && descriptions[sandwich]) {
-                descriptionDiv.textContent = descriptions[sandwich];
-                descriptionDiv.classList.add('show');
-            } else {
-                descriptionDiv.classList.remove('show');
-            }
-        }
-    </script>
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Order';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        })
+        .catch(error => {
+            console.error('Error submitting order:', error);
+            alert('Error submitting order. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Order';
+        });
+        
+    } catch (error) {
+        console.error('Error submitting order:', error);
+        alert('Error submitting order. Please check your connection and try again.');
+        const submitBtn = document.querySelector('.submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Order';
+    }
+}
+
+function showSandwichDescription() {
+    const sandwich = document.getElementById('sandwich').value;
+    const descriptionDiv = document.getElementById('sandwichDescription');
+    
+    const descriptions = {
+        "#1 Pepe": "Real applewood smoked ham and provolone cheese garnished with lettuce, tomato, and mayo.",
+        "#2 Big John": "Medium rare choice roast beef, topped with yummy mayo, lettuce, and tomato.",
+        "#3 Totally Tuna": "Fresh housemade tuna salad, Hellmann's mayo, lettuce, tomato, and our homemade bread!",
+        "#4 Turkey Tom": "Fresh sliced turkey breast, topped with lettuce, tomato, alfalfa sprouts, and mayo.",
+        "#5 Vito": "The original Italian sub with genoa salami, provolone, capicola, onion, lettuce, tomato, and an authentic Italian vinaigrette.",
+        "#6 The Veggie": "Layers of provolone cheese separated by real avocado spread, sliced cucumber, lettuce, tomato, and mayo.",
+        "#7 Smoked Ham Club": "A full 1/4 pound of real applewood smoked ham, provolone cheese, lettuce, tomato, and real mayo!",
+        "#8 Billy Club": "Choice roast beef, smoked ham, provolone cheese, Dijon mustard, lettuce, tomato, and mayo.",
+        "#9 Italian Night Club": "Real genoa salami, Italian capicola, smoked ham, and provolone cheese all topped with lettuce, tomato, onion, mayo, and our homemade Italian vinaigrette.",
+        "#10 Hunter's Club": "A full 1/4 pound of fresh sliced medium rare roast beef, provolone, lettuce, tomato, and mayo.",
+        "#11 Country Club": "Fresh sliced turkey breast, applewood smoked ham, provolone, and tons of lettuce, tomato, and mayo!",
+        "#12 Beach Club": "Fresh baked turkey breast, provolone cheese, avocado spread, sliced cucumber, sprouts, lettuce, tomato, and mayo!",
+        "#13 Gourmet Veggie Club": "Double provolone, real avocado spread, sliced cucumber, alfalfa sprouts, lettuce, tomato, and mayo.",
+        "#14 Bootlegger Club": "Roast beef, turkey breast, lettuce, tomato, and mayo. An American classic!",
+        "#15 Club Tuna": "The same as our #3 Totally Tuna except this one has a lot more. Fresh housemade tuna salad, provolone, sprouts, cucumber, lettuce, and tomato.",
+        "#16 Club Lulu": "Fresh sliced turkey breast, bacon, lettuce, tomato, and mayo.",
+        "#17 Ultimate Porker": "Real applewood smoked ham and bacon with lettuce, tomato and mayo, what could be better!",
+        "J.J. Gargantuan": "This sandwich was invented by a hungry Marine. Genoa salami, sliced smoked ham, capicola, roast beef, turkey and provolone, jammed into one of our homemade French buns then smothered with onions, mayo, lettuce, tomato, and our homemade Italian dressing.",
+        "J.J.B.L.T.": "Bacon, lettuce, tomato, and mayo."
+    };
+    
+    if (sandwich && descriptions[sandwich]) {
+        descriptionDiv.textContent = descriptions[sandwich];
+        descriptionDiv.classList.add('show');
+    } else {
+        descriptionDiv.classList.remove('show');
+    }
+}
+</script>
 </body>
 </html>
